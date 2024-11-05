@@ -29,6 +29,11 @@ def parse_i_file(file_path):
         metadata = [file_name, original_path, deletion_timestamp]
         return metadata
 
+# Function to check if a string is mostly readable (ASCII characters only)
+def is_readable(s):
+    # Check if all characters are ASCII and printable
+    return all(32 <= ord(char) <= 126 for char in s)
+
 # get $Recycle.Bin logs
 def get_recycle_logs(drive, user):
     RID = SAM_parsing.get_RID(drive, user)
@@ -50,5 +55,10 @@ def get_recycle_logs(drive, user):
             file_metadata = parse_i_file(file_path)
             file_name, original_path, deletion_date = file_metadata
             recycle_logs.append(["Deleted file", original_path, deletion_date])
+
+    # remove unreadable content
+    for log in recycle_logs:
+        if not is_readable(log[1]):
+            recycle_logs.remove(log)
 
     return recycle_logs

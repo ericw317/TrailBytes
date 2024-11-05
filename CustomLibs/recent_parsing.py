@@ -1,6 +1,7 @@
 from CustomLibs import time_conversion as TC
 import os
 from construct import Struct, Int32ul, Int16ul, Int32sl, Bytes
+import shutil
 
 # Define the LNK header structure, which includes file attributes at offset 0x18
 LNK_HEADER = Struct(
@@ -36,7 +37,7 @@ def get_recent_logs(drive, user):
     for file in os.listdir(recent_path):
         file_path = os.path.join(recent_path, file)
         m_time = TC.convert_unix_epoch_seconds(os.path.getmtime(file_path))
-        # original_path = parse_lnk_path(file_path)
+
         if os.path.isfile(file_path):
             if is_lnk_directory(file_path):
                 recent_logs.append([f"Opened directory:", file, m_time])
@@ -56,6 +57,8 @@ def is_lnk_directory(lnk_path):
 
         return is_directory
 
+
+'''
 def parse_lnk_path(lnk_path):
     with open(lnk_path, "rb") as f:
         lnk = LNK_HEADER.parse(f.read(76))  # Read and parse the header
@@ -69,3 +72,4 @@ def parse_lnk_path(lnk_path):
         original_path = path_bytes.decode("utf-16le", errors="ignore").rstrip("\x00")
 
         return original_path
+'''

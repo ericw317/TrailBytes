@@ -2,6 +2,7 @@ from CustomLibs import InputValidation as IV
 from CustomLibs import list_functions as LF
 from CustomLibs import recent_parsing
 from CustomLibs import recycle_bin_parsing
+from CustomLibs import NTUSER_parsing
 import config
 import psutil
 import os
@@ -86,12 +87,25 @@ def main():
     drive_list = list_drives()
     drive = get_drive(drive_list)
     user = get_users(drive)
-    recent_logs = recent_parsing.get_recent_logs(drive, user)
-    recycle_logs = recycle_bin_parsing.get_recycle_logs(drive, user)
+
+    # gather logs
+    try:
+        recent_logs = recent_parsing.get_recent_logs(drive, user)
+    except Exception:
+        recent_logs = []
+    try:
+        recycle_logs = recycle_bin_parsing.get_recycle_logs(drive, user)
+    except Exception:
+        recycle_logs = []
+    try:
+        user_assist_logs = NTUSER_parsing.get_user_assist(drive, user)
+    except Exception:
+        user_assist_logs = []
 
     # combine logs and sort
     all_logs = combine_logs(all_logs, recent_logs)
     all_logs = combine_logs(all_logs, recycle_logs)
+    all_logs = combine_logs(all_logs, user_assist_logs)
     all_logs = sorted(all_logs, key=lambda x: x[2])
 
     # get spacing
@@ -100,12 +114,22 @@ def main():
     for log in all_logs:
         if len(log[1]) > spacing:
             spacing = len(log[1])
+    spacing += 10
+
+    # output logs to a file
+    with open(f"{user} Activity Log.txt", 'w') as file:
+        file.write(f"{'Activity':<{activity_spacing}}{'File':<{spacing}}Timestamp\n")
+        file.write("-" * (activity_spacing + spacing + 25) + "\n")
+        for log in all_logs:
+            file.write(f"{log[0]:<{activity_spacing}}{log[1]:<{spacing}}{log[2]}\n")
 
     # print logs
-    print(f"{'Activity':<{spacing}}Timestamp")
-    print("-" * (spacing + 25))
+    print(f"{'Activity':<{activity_spacing}}{'File':<{spacing}}Timestamp")
+    print("-" * (activity_spacing + spacing + 25))
     for log in all_logs:
         print(f"{log[0]:<{activity_spacing}}{log[1]:<{spacing}}{log[2]}")
+
+    print(f"\nLogs saved to '{user} Activity Log.txt'")
 
 
 if __name__ == "__main__":
